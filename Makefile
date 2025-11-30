@@ -26,3 +26,14 @@ show-db-settings:
 	@echo "-- Live PostgreSQL Settings from container (filtered) --"
 	@helpers/show_db_settings.sh
 	@echo "--------------------------------------------------------"
+
+# ==================================================================================== #
+# SCENARIOS
+# ==================================================================================== #
+
+## scenario1: Run scenario 1 (Normal Operation) and display results
+.PHONY: scenario1
+scenario1:
+	docker compose down
+	docker compose up --abort-on-container-exit app
+	docker compose down
