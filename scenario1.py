@@ -6,13 +6,18 @@ from pool_helpers import Metrics, setup_listeners, client_work
 
 load_dotenv()
 
+CLIENTS = 3
+POOL_SIZE = 3
+MAX_OVERFLOW = 2
+POOL_TIMEOUT = 30.0
+
 
 async def main():
     print("\n" + "="*60)
     print("SCENARIO 1: NORMAL OPERATION")
     print("="*60)
-    print("Clients: 3")
-    print("Pool: size=5, max_overflow=10")
+    print(f"Clients: {CLIENTS}")
+    print(f"Pool: size={POOL_SIZE}, max_overflow={MAX_OVERFLOW}")
     print("="*60 + "\n")
 
     database_url = os.getenv("DATABASE_URL")
@@ -20,14 +25,14 @@ async def main():
 
     engine = create_async_engine(
         database_url,
-        pool_size=5,
-        max_overflow=10,
-        pool_timeout=30.0,
+        pool_size=POOL_SIZE,
+        max_overflow=MAX_OVERFLOW,
+        pool_timeout=POOL_TIMEOUT,
     )
 
     setup_listeners(engine, metrics)
 
-    tasks = [client_work(i, engine) for i in range(3)]
+    tasks = [client_work(i, engine) for i in range(CLIENTS)]
     await asyncio.gather(*tasks)
 
     await engine.dispose()
