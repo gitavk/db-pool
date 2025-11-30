@@ -44,3 +44,10 @@ scenario2:
 	docker compose down
 	docker compose run --rm app python scenario2.py
 	docker compose down
+
+## scenario3: Run scenario 3 (Pool Exhaustion) and display results
+.PHONY: scenario3
+scenario3:
+	docker compose down
+	docker compose run --rm app python scenario3.py
+	docker compose down

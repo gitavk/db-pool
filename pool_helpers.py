@@ -21,6 +21,7 @@ class Metrics:
         self.max_overflow_used = 0
         self.query_count = 0
         self.total_query_time = 0.0
+        self.errors = 0
         self.start_time = datetime.now()
 
     def log(self, event_type, details=""):
@@ -30,20 +31,24 @@ class Metrics:
         self.query_count += 1
         self.total_query_time += duration
 
+    def record_error(self):
+        self.errors += 1
+
     def finalize(self):
         self.end_time = datetime.now()
 
     def summary(self):
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("SUMMARY")
-        print("="*60)
+        print("=" * 60)
         print(f"Created:           {self.created}")
         print(f"Closed:            {self.closed}")
         print(f"Checkouts:         {self.checkouts}")
         print(f"Checkins:          {self.checkins}")
         print(f"Active:            {self.active}")
         print(f"Max Overflow Used: {self.max_overflow_used}")
-        print("="*60)
+        print(f"Errors:            {self.errors}")
+        print("=" * 60)
 
         if self.query_count > 0:
             avg_query_time = self.total_query_time / self.query_count
@@ -51,7 +56,7 @@ class Metrics:
             print(f"Total Queries:     {self.query_count}")
             print(f"Total Time:        {self.total_query_time:.4f}s")
             print(f"Average Time:      {avg_query_time:.4f}s")
-            print("="*60)
+            print("=" * 60)
 
 
 def setup_listeners(engine, metrics):
@@ -75,7 +80,10 @@ def setup_listeners(engine, metrics):
     def on_checkout(dbapi_conn, conn_record, conn_proxy):
         metrics.checkouts += 1
         pool = engine.sync_engine.pool
-        metrics.log("CHECKOUT", f"checkout #{metrics.checkouts}, pool={pool.size()}, overflow={pool.overflow()}")
+        metrics.log(
+            "CHECKOUT",
+            f"checkout #{metrics.checkouts}, pool={pool.size()}, overflow={pool.overflow()}",
+        )
 
     @event.listens_for(engine.sync_engine.pool, "checkin")
     def on_checkin(dbapi_conn, conn_record):
@@ -83,7 +91,7 @@ def setup_listeners(engine, metrics):
         metrics.log("CHECKIN", f"checkin #{metrics.checkins}")
 
 
-async def client_work(client_id, engine, metrics=None):
+async def client_work(client_id, engine, metrics=None, hold_duration=0):
     try:
         log_print(f"Client {client_id}: requesting connection")
 
@@ -91,10 +99,12 @@ async def client_work(client_id, engine, metrics=None):
         async with engine.connect() as conn:
             log_print(f"Client {client_id}: got connection, working...")
 
-            result = await conn.execute(text(
-                "SELECT count(*) as connections, state FROM pg_stat_activity "
-                "WHERE datname = 'demo_db' GROUP BY state ORDER BY state"
-            ))
+            result = await conn.execute(
+                text(
+                    "SELECT count(*) as connections, state FROM pg_stat_activity "
+                    "WHERE datname = 'demo_db' GROUP BY state ORDER BY state"
+                )
+            )
             rows = result.fetchall()
             query_duration = (datetime.now() - query_start).total_seconds()
 
@@ -103,7 +113,13 @@ async def client_work(client_id, engine, metrics=None):
 
             conn_info = ", ".join([f"{row[1]}={row[0]}" for row in rows])
             log_print(f"Client {client_id}: connections [{conn_info}]")
+
+            if hold_duration > 0:
+                await conn.execute(text(f"SELECT pg_sleep({hold_duration})"))
+
             log_print(f"Client {client_id}: done")
 
-    except Exception as e:
-        log_print(f"Client {client_id}: ERROR - {e}")
+    except Exception:
+        if metrics:
+            metrics.record_error()
+        log_print(f"Client {client_id}: db error")

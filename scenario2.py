@@ -13,12 +13,12 @@ POOL_TIMEOUT = 30.0
 
 
 async def main():
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SCENARIO 2: POOL SATURATION")
-    print("="*60)
+    print("=" * 60)
     print(f"Clients: {CLIENTS}")
     print(f"Pool: size={POOL_SIZE}, max_overflow={MAX_OVERFLOW}")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     database_url = os.getenv("DATABASE_URL")
     metrics = Metrics()
