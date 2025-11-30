@@ -3,7 +3,7 @@
 ## System Requirements
 
 - Python 3.12 or higher
-- PostgreSQL 16 or higher
+- PostgreSQL 18 or higher
 
 ## Required Python Packages
 
