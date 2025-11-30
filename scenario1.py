@@ -8,7 +8,7 @@ load_dotenv()
 
 CLIENTS = 3
 POOL_SIZE = 3
-MAX_OVERFLOW = 2
+MAX_OVERFLOW = 3
 POOL_TIMEOUT = 30.0
 
 
@@ -32,10 +32,11 @@ async def main():
 
     setup_listeners(engine, metrics)
 
-    tasks = [client_work(i, engine) for i in range(CLIENTS)]
+    tasks = [client_work(i, engine, metrics=metrics) for i in range(CLIENTS)]
     await asyncio.gather(*tasks)
 
     await engine.dispose()
+    metrics.finalize()
     metrics.summary()
 
 
