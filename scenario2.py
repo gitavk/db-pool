@@ -9,9 +9,9 @@ load_dotenv()
 
 async def main():
     print("\n" + "="*60)
-    print("SCENARIO 1: NORMAL OPERATION")
+    print("SCENARIO 2: POOL SATURATION")
     print("="*60)
-    print("Clients: 3")
+    print("Clients: 10")
     print("Pool: size=5, max_overflow=10")
     print("="*60 + "\n")
 
@@ -27,7 +27,7 @@ async def main():
 
     setup_listeners(engine, metrics)
 
-    tasks = [client_work(i, engine) for i in range(3)]
+    tasks = [client_work(i, engine, duration=3.0) for i in range(10)]
     await asyncio.gather(*tasks)
 
     await engine.dispose()
