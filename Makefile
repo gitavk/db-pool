@@ -51,3 +51,10 @@ scenario3:
 	docker compose down
 	docker compose run --rm app python scenario3.py
 	docker compose down
+
+## scenario4: Run scenario 4 (Timeout Pressure) and display results
+.PHONY: scenario4
+scenario4:
+	docker compose down
+	docker compose run --rm app python scenario4.py
+	docker compose down

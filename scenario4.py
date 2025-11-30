@@ -1,22 +1,26 @@
 import asyncio
 import os
 from sqlalchemy.ext.asyncio import create_async_engine
+from dotenv import load_dotenv
 from pool_helpers import Metrics, setup_listeners, client_work
 
+load_dotenv()
 
 CLIENTS = 10
 POOL_SIZE = 3
 MAX_OVERFLOW = 3
-POOL_TIMEOUT = 2.0
-HOLD_DURATION = 2.0
+POOL_TIMEOUT = 3.0
+HOLD_DURATION = 5.0
 
 
 async def main():
     print("\n" + "=" * 60)
-    print("SCENARIO 3: POOL EXHAUSTION")
+    print("SCENARIO 4: TIMEOUT PRESSURE")
     print("=" * 60)
     print(f"Clients: {CLIENTS}")
-    print(f"Pool: size={POOL_SIZE}, max_overflow={MAX_OVERFLOW}")
+    print(
+        f"Pool: size={POOL_SIZE}, max_overflow={MAX_OVERFLOW}, timeout={POOL_TIMEOUT}s"
+    )
     print("=" * 60 + "\n")
 
     database_url = os.getenv("DATABASE_URL")
